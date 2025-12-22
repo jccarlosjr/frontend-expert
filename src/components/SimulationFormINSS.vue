@@ -459,7 +459,7 @@ export default {
       this.loading = true;
       this.data = null;
       try {
-        const r = await api.post("http://127.0.0.1:8000/api/v1/operations/", payload);
+        const r = await api.post("/operations/", payload);
         this.data = r.data;
       } catch (e) {
         console.error(e);
