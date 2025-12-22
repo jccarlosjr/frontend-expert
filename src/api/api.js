@@ -2,7 +2,7 @@ import axios from 'axios'
 import router from '@/router'
 
 const api = axios.create({
-  baseURL: 'https://expertconsig.pythonanywhere.com/admin/api/v1/',
+  baseURL: 'https://expertconsig.pythonanywhere.com/api/v1',
   headers: {
     'Content-Type': 'application/json'
   }
