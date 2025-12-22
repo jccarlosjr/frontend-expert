@@ -987,6 +987,10 @@ export default {
   background-color: rgb(0, 0, 88);
 }
 
+#bank-756 {
+  background-color: rgba(50, 50, 255, 1);
+}
+
 .img-bank {
   cursor: pointer;
   transition: .2s;
