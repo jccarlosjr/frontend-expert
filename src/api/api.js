@@ -55,7 +55,7 @@ api.interceptors.response.use(
 
         try {
           const r = await axios.post(
-            'http://127.0.0.1:8000/api/v1/authentication/token/refresh/',
+            'https://expertconsig.pythonanywhere.com/api/v1/authentication/token/refresh/',
             { refresh }
           )
 
