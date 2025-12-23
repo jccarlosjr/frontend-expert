@@ -995,7 +995,7 @@ export default {
   cursor: pointer;
   transition: .2s;
   border-radius: 3px;
-  height: 2.5vh;
+  height: 4.5vh;
 }
 
 .bank-disabled {
