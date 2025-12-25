@@ -38,6 +38,15 @@
                             </span>
                         </button>
 
+                        <button
+                        class="btn btn-outline-secondary btn-sm me-2"
+                        title="Imprimir ofertas"
+                        @click.stop="printSimulation(simulation.id)"
+                        >
+                            <i class="bi bi-printer"></i>
+                        </button>
+
+
                         <!-- BOTÃO DELETE -->
                         <button class="btn btn-outline-danger btn-sm ms-2 me-2" title="Excluir simulação"
                             @click.stop="deleteSimulation(simulation.id)">
@@ -50,13 +59,13 @@
                 <!-- BODY -->
                 <div :id="`sim-${simulation.id}`" class="accordion-collapse collapse"
                     data-bs-parent="#simulationsAccordion">
-                    <div class="accordion-body">
+                    <div class="accordion-body" :id="`print-sim-${simulation.id}`">
                         <!-- ITENS -->
-                        <div v-for="item in simulation.items" :key="item.contract" class="card mb-3 shadow-sm">
+                        <div v-for="item in simulation.items" :key="item.contract" class="card mb-1 shadow-lg">
                             <!-- HEADER -->
                             <div class="card-header">
-                                <div class="row text-center justify-content-center gy-3">
-                                    <div class="col-6 col-md-4 col-lg-4 mb-4">
+                                <div v-if="item.original_bank ?? false" class="row text-center justify-content-center gy-3">
+                                    <div class="col-6 col-md-4 col-lg-4 mb-1">
                                         <strong class="text-muted d-block">Dados do Contrato Original</strong>
                                     </div>
                                 </div>
@@ -97,7 +106,7 @@
                             <!-- BODY -->
                             <div class="card-body">
                                 <div class="row text-center justify-content-center gy-3">
-                                    <div class="col-6 col-md-3 col-lg-2 mb-3">
+                                    <div class="col-6 col-md-4 col-lg-4 mb-1">
                                         <strong class="text-muted d-block">Dados da Proposta</strong>
                                     </div>
                                 </div>
@@ -230,4 +239,85 @@ async function deleteSimulation(id) {
         showToast("Erro ao excluir oferta", "danger");
     }
 }
+
+function printSimulation(simulationId) {
+  const container = document.getElementById(
+    `print-sim-${simulationId}`
+  );
+
+  if (!container) return;
+
+  const clone = container.cloneNode(true);
+
+  // Remove botões, ações e accordion leftovers
+  clone.querySelectorAll(
+    "button, .btn, .accordion-button"
+  ).forEach(el => el.remove());
+
+  const printWindow = window.open(
+    "",
+    "_blank",
+    "width=1200,height=900"
+  );
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Proposta Comercial</title>
+
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+        />
+
+        <style>
+          @page {
+            size: A2 portrait;
+            margin: 20mm;
+          }
+
+          body {
+            background: white;
+            font-size: 16px;
+            padding: 20px;
+          }
+
+          .card {
+            page-break-inside: avoid;
+            box-shadow: none;
+          }
+
+          .accordion-body {
+            padding: 0;
+          }
+
+          .card-footer {
+            border-top: 1px solid #ddd;
+          }
+
+          .bank-logo {
+            max-height: 60px;
+          }
+
+          h4, h5 {
+            font-size: 26px;
+          }
+        </style>
+      </head>
+
+      <body>
+        ${clone.outerHTML}
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+}
+
 </script>

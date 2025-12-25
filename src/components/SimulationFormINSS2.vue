@@ -13,22 +13,30 @@
 
           <div class="modal-body">
 
-            <!-- Tabela ÚNICA -->
             <table class="table text-center">
               <thead>
                 <tr>
                   <th>Tabela</th>
                   <th>Prazo</th>
                   <th>Troco</th>
+                  <th>Ação</th>
                 </tr>
               </thead>
 
               <tbody>
-                <!-- SOMENTE AS LINHAS -->
                 <tr v-for="(table, idx) in selectedBank?.result || []" :key="idx">
                   <td>{{ table.name }}</td>
                   <td>{{ table.terms }}x</td>
                   <td>{{ table.exchange }}</td>
+                  <td>
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      @click="addToWallet(table)"
+                    >
+                      <i class="bi bi-plus-circle me-1"></i>
+                      Carteira
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -290,6 +298,8 @@ input[type="number"] {
 import api from '../api/api.js'
 import { useToast } from "@/composables/useToast";
 const { showToast } = useToast();
+import { useWalletStore } from "@/stores/walletStore";
+
 
 export default {
   name: 'SimulationsView',
@@ -303,8 +313,12 @@ export default {
       ddb: "",
       showDDB: false,
       inv: ["32", "92", "04", "06", "33", "34", "37", "38", "51", "83", "96"],
-      loas: ["88", "87"]
+      loas: ["88", "87"],
+      walletStore: null,
     }
+  },
+  created() {
+    this.walletStore = useWalletStore();
   },
   methods: {
     formatDate(event) {
@@ -327,6 +341,60 @@ export default {
       const modal = new bootstrap.Modal(document.getElementById("bankModal"));
       modal.show();
     },
+    addToWallet(table) {
+      if (!this.selectedBank) return;
+      const exists = this.walletStore.wallet.some(
+        item =>
+          item.bank.bank === this.selectedBank.bank &&
+          item.table.name === table.name &&
+          item.table.terms === table.terms
+      );
+
+      if (exists) {
+        showToast("Essa tabela já está na carteira", "warning");
+        return;
+      }
+
+      const inicioDescontoInput = document.getElementById("inicioDescontoInput");
+      const prazoOriginal = document.getElementById("prazoOriginalInput").value.trim();
+      const months = this.getMonthsPassed(inicioDescontoInput.value.trim());
+      const prazoRestante = Number(prazoOriginal) - months;
+
+      const item = {
+        id: crypto.randomUUID(),
+        type: "loan",
+        bank: {
+          bank: this.selectedBank.bank,
+          bank_name: this.selectedBank.bank_name,
+          icon: this.selectedBank.icon
+        },
+
+        table: {
+          name: table.name,
+          terms: table.terms,
+          exchange: Number(table.exchange)
+        },
+
+        loan: {
+          contract: null,
+          original_bank: this.selectedBank.bank,
+          installment: Number(
+            document.getElementById("parcelaInput")?.value || 0
+          ),
+          ballance: Number(
+            document.getElementById("valorFinanciadoInput")?.value || 0
+          ),
+          remaining_terms: prazoRestante,
+          total_terms: prazoOriginal
+        }
+      };
+
+      this.walletStore.wallet.push(item);
+      localStorage.setItem("wallet", JSON.stringify(this.walletStore.wallet));
+
+      showToast("Tabela adicionada à carteira", "success");
+    },
+
     initTooltips() {
       this.tooltips.forEach(t => t.dispose());
       this.tooltips = [];
@@ -362,6 +430,24 @@ export default {
         input.value = value;
       }
     },
+    getMonthsPassed(input) {
+      if (!input || typeof input !== "string") return 0;
+
+      const [mesStr, anoStr] = input.split("/");
+      const mes = parseInt(mesStr, 10);
+      const ano = parseInt(anoStr, 10);
+
+      if (isNaN(mes) || isNaN(ano) || mes < 1 || mes > 12) return 0;
+
+      const hoje = new Date();
+      const mesAtual = hoje.getMonth() + 1;
+      const anoAtual = hoje.getFullYear();
+
+      const totalMeses =
+        (anoAtual - ano) * 12 + (mesAtual - mes);
+
+      return totalMeses < 0 ? 0 : totalMeses;
+    },
     async loadData() {
       const idade = document.getElementById("idadeInput").value.trim();
       const prazoOriginal = document.getElementById("prazoOriginalInput").value.trim();
@@ -371,7 +457,8 @@ export default {
       const entityCode = document.getElementById("entityCodeInput").value;
       const analfabeto = document.getElementById("analfabetoCheck").checked;
       const negativo = document.getElementById("negativoCheck").checked;
-      const months = getMonthsPassed(inicioDescontoInput.value.trim());
+      const inicioDescontoInput = document.getElementById("inicioDescontoInput");
+      const months = this.getMonthsPassed(inicioDescontoInput.value.trim());
       const ddb = document.getElementById("ddbInput")?.value?.trim() || 0;
       const prazoRestante = Number(prazoOriginal) - months;
       let t = getRate(financiado, parcela, prazoOriginal);
@@ -381,22 +468,12 @@ export default {
         return /^\d+$/.test(value);
       }
 
-      function getMonthsPassed(input) {
-        const [mesStr, anoStr] = input.split('/');
-        if (!mesStr || !anoStr) return 0;
-        const mes = parseInt(mesStr, 10);
-        const ano = parseInt(anoStr, 10);
-        if (isNaN(mes) || isNaN(ano) || mes < 1 || mes > 12) return 0;
-        return 13 - mes;
-      }
-
       function convertDateToISO(dateBR) {
         if (!dateBR || dateBR.length !== 10) return null;
         const [day, month, year] = dateBR.split("/");
         if (!day || !month || !year) return null;
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
-
 
       function getRate(amountFinanced, installment, terms) {
         const precision = 0.00001;
@@ -427,6 +504,27 @@ export default {
         return /^(\d+|\d+\.\d{1,2})$/.test(value);
       }
 
+      function validateMonthYear(input) {
+        if (typeof input !== "string") return false;
+
+        const regex = /^(0[1-9]|1[0-2])\/\d{4}$/;
+        if (!regex.test(input)) return false;
+        const [mesStr, anoStr] = input.split("/");
+        const mes = Number(mesStr);
+        const ano = Number(anoStr);
+
+        const hoje = new Date();
+        const mesAtual = hoje.getMonth() + 1;
+        const anoAtual = hoje.getFullYear();
+        if (
+          ano > anoAtual ||
+          (ano === anoAtual && mes > mesAtual)
+        ) {
+          return false;
+        }
+        return true;
+      }
+
       function isLesserThan() {
         return prazoRestante <= prazoOriginal;
       }
@@ -438,23 +536,24 @@ export default {
         { value: prazoRestante, name: "Prazo Restante", rule: isLesserThan },
         { value: parcela, name: "Parcela", rule: isFloat },
         { value: financiado, name: "Valor Financiado", rule: isFloat },
+        { value: inicioDescontoInput.value, name: "Início do Desconto", rule: validateMonthYear },
       ];
 
       for (let v of validations) {
         if (!v.value || !v.rule(v.value)) {
-          this.showToast(`Campo inválido: ${v.name}`, 'danger');
-          this.setFieldError(v.name.replace(/\s/g, '') + 'Input', true);
+          showToast(`Campo inválido: ${v.name}`, 'danger');
+          setFieldError(v.name.replace(/\s/g, '') + 'Input', true);
           return;
         }
       }
 
       if (!entityCode || entityCode === "Espécie") {
-        this.showToast("Selecione uma espécie válida.", 'danger');
+        showToast("Selecione uma espécie válida.", 'danger');
         return;
       }
 
       if (t === 0.01){
-        this.showToast("Não foi possível calcular uma taxa válida.\nVerifique prazo original, valor financiado e parcela.", 'danger');
+        showToast("Não foi possível calcular uma taxa válida.\nVerifique prazo original, valor financiado e parcela.", 'danger');
         return;
       }
 

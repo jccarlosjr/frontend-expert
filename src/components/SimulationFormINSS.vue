@@ -1,4 +1,4 @@
-<template> 
+<template>
   <teleport to="body">
     <div class="modal fade" id="bankModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -14,24 +14,31 @@
           <div class="modal-body">
 
             <!-- Tabela ÚNICA -->
-            <table class="table text-center">
+            <table class="table text-center align-middle">
               <thead>
                 <tr>
                   <th>Tabela</th>
                   <th>Prazo</th>
                   <th>Troco</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
 
               <tbody>
-                <!-- SOMENTE AS LINHAS -->
                 <tr v-for="(table, idx) in selectedBank?.result || []" :key="idx">
                   <td>{{ table.name }}</td>
                   <td>{{ table.terms }}x</td>
                   <td>{{ table.exchange }}</td>
+                  <td>
+                    <button class="btn btn-outline-primary btn-sm" @click="addToWallet(table)">
+                      <i class="bi bi-plus-circle me-1"></i>
+                      Carteira
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
+
 
           </div>
 
@@ -85,11 +92,7 @@
         <div class="row g-3 justify-content-center">
           <div class="col-12 col-md-6 col-lg-6">
             <div class="mb-3">
-              <select class="form-control" id="entityCodeInput"
-                required 
-                v-model="entityCode"
-                @change="validateDDB"
-                >
+              <select class="form-control" id="entityCodeInput" required v-model="entityCode" @change="validateDDB">
                 <option selected disabled>Espécie</option>
                 <option value="1">1 - Por morte do trabalhador rural</option>
                 <option value="2">2 - Pensão por morte por acidente do trabalho do trabalhador rural</option>
@@ -155,16 +158,8 @@
         </div>
         <div v-if="showDDB" class="row g-3 justify-content-center text-center">
           <div class="form-floating mb-3 col-12 col-md-6 col-lg-6">
-            <input
-              id="ddbInput"
-              type="text"
-              class="form-control text-center"
-              placeholder="dd/mm/aaaa"
-              v-model="ddb"
-              @input="maskDate"
-              @blur="validateDDBDate"
-              maxlength="10"
-            />
+            <input id="ddbInput" type="text" class="form-control text-center" placeholder="dd/mm/aaaa" v-model="ddb"
+              @input="maskDate" @blur="validateDDBDate" maxlength="10" />
             <label for="ddbInput">Data Despacho (DDB)</label>
           </div>
         </div>
@@ -291,6 +286,8 @@ input[type="number"] {
 import api from '../api/api.js'
 import { useToast } from "@/composables/useToast";
 const { showToast } = useToast();
+import { useWalletStore } from "@/stores/walletStore";
+
 
 export default {
   name: 'SimulationsView',
@@ -304,13 +301,71 @@ export default {
       ddb: "",
       showDDB: false,
       inv: ["32", "92", "04", "06", "33", "34", "37", "38", "51", "83", "96"],
-      loas: ["88", "87"]
+      loas: ["88", "87"],
+      walletStore: null,
     }
+  },
+  created() {
+    this.walletStore = useWalletStore();
   },
   methods: {
     onlyNumbers(event) {
       const input = event.target;
       input.value = input.value.replace(/\D/g, "");
+    },
+    addToWallet(table) {
+      if (!this.selectedBank) return;
+
+      const item = {
+        id: Date.now(),
+        type: "loan",
+
+        bank: {
+          bank: this.selectedBank.bank,
+          bank_name: this.selectedBank.bank_name,
+          icon: this.selectedBank.icon
+        },
+
+        table: {
+          name: table.name,
+          terms: table.terms,
+          exchange: Number(table.exchange)
+        },
+
+        loan: {
+          contract: null,
+          original_bank: document.getElementById("bancoOrigemInput")?.value || null,
+          installment: Number(
+            document.getElementById("parcelaInput")?.value || 0
+          ),
+          ballance: Number(
+            document.getElementById("saldoInput")?.value || 0
+          ),
+          remaining_terms: Number(
+            document.getElementById("prazoRestanteInput")?.value || 0
+          ),
+          total_terms: Number(
+            document.getElementById("prazoOriginalInput")?.value || 0
+          )
+        }
+      };
+
+      const exists = this.walletStore.wallet.some(
+        w =>
+          w.bank.bank === item.bank.bank &&
+          w.table.name === item.table.name &&
+          w.table.terms === item.table.terms
+      );
+
+      if (exists) {
+        showToast("Essa tabela já está na carteira", "warning");
+        return;
+      }
+
+      this.walletStore.wallet.push(item);
+      localStorage.setItem("wallet", JSON.stringify(this.walletStore.wallet));
+
+      showToast("Oferta adicionada à carteira", "success");
     },
     openBankModal(bank) {
       this.selectedBank = bank;
@@ -436,7 +491,7 @@ export default {
         return;
       }
       let rate = getRate(parseFloat(saldo.replace(",", ".")), parseFloat(parcela.replace(",", ".")), parseInt(prazoRestante))
-      if (rate === 0.01){
+      if (rate === 0.01) {
         showToast("Não foi possível calcular uma taxa válida.\nVerifique prazo restante, saldo devedor e parcela.", 'danger');
         return;
       }
@@ -463,7 +518,7 @@ export default {
         this.data = r.data;
       } catch (e) {
         console.error(e);
-        if(e.message === "Network Error") {
+        if (e.message === "Network Error") {
           showToast("Erro ao conectar ao servidor.", 'danger');
         } else {
           showToast(`Erro ao carregar dados.`, 'danger');

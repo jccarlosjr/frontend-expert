@@ -23,7 +23,7 @@
                     <input
                       v-model="cpf"
                       type="text"
-                      class="form-control"
+                      class="form-control form-control-sm"
                       maxlength="14"
                       placeholder="123.456.789-01"
                       @input="onCpfInput"
@@ -35,7 +35,7 @@
                     <input
                       v-model="nome"
                       type="text"
-                      class="form-control"
+                      class="form-control form-control-sm"
                       placeholder="Nome do cliente"
                     />
                   </div>
@@ -45,7 +45,7 @@
                     <input
                       v-model="entityNumber"
                       type="text"
-                      class="form-control"
+                      class="form-control form-control-sm"
                       maxlength="13"
                       placeholder="123.456.789-0"
                       @input="onEntityInput"
@@ -111,23 +111,24 @@
                     <div class="col-12 col-md-6">
                       <small class="text-muted">Tipo de Operação</small>
                       <div class="fw-semibold text-primary">Margem/RMC/RCC</div>
+                    </div>  
+
+                    <div class="col-6 col-md-2">
+                      <small class="text-muted">Parcela</small>
+                      <div>{{ formatCurrency(item.margin.installment) }}</div>
                     </div>
                   </template>
-
                 </div>
               </div>
 
               <!-- BODY DO CARD -->
               <div class="card-body">
                 <div class="row g-3 justify-content-center align-items-center text-center">
-
                   <div class="col-12 col-md-2">
-                    <img
-                      :src="item.bank.icon"
-                      :id="'id-bank-' + item.bank.bank"
-                      class="img-fluid mb-2 bank-logo"
-                      style="max-height: 40px"
-                    >
+                    <small class="text-muted">Banco</small>
+                    <div class="fw-semibold">
+                      {{ item.bank.bank_name }}
+                    </div>
                   </div>
 
                   <div class="col-12 col-md-5">
@@ -171,8 +172,13 @@
               </div>
             </div>
 
+            <button class="btn btn-outline-secondary btn-sm" @click="printWallet">
+              <i class="bi bi-printer me-1"></i>
+              Imprimir Card
+            </button>
+
             <button
-              class="btn btn-primary"
+              class="btn btn-primary btn-sm"
               :disabled="!walletStore.wallet.length || loading"
               @click="saveWallet"
             >
@@ -328,6 +334,83 @@ async function saveWallet() {
     loading.value = false;
   }
 }
+
+function printWallet() {
+  const modal = document.getElementById("walletModal");
+  const content = modal.querySelector(".modal-content");
+
+  const clone = content.cloneNode(true);
+
+  // Remove botões e ações
+  clone.querySelectorAll("button, .btn, .btn-close")
+    .forEach(el => el.remove());
+
+  // Remove scroll
+  const body = clone.querySelector(".modal-body");
+  if (body) {
+    body.style.maxHeight = "none";
+    body.style.overflow = "visible";
+  }
+
+  const printWindow = window.open("", "_blank", "width=1200,height=900");
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Proposta Comercial</title>
+
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+        />
+
+        <style>
+          /* === CONFIGURAÇÃO DO PAPEL === */
+          @page {
+            size: A2 portrait;
+            margin: 20mm;
+          }
+
+          body {
+            background: white;
+            font-size: 16px;
+          }
+
+          .modal-content {
+            border: none;
+            box-shadow: none;
+          }
+
+          .card {
+            page-break-inside: avoid;
+          }
+
+          h5 {
+            font-size: 26px;
+          }
+
+          .bank-logo {
+            max-height: 60px;
+          }
+        </style>
+      </head>
+
+      <body>
+        ${clone.outerHTML}
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+}
+
+
 </script>
 
 <style scoped>
@@ -338,4 +421,43 @@ async function saveWallet() {
 #id-bank-707{
   background-color: rgb(0, 0, 88);
 }
+
+@media print {
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  .modal {
+    position: static !important;
+    display: block !important;
+  }
+
+  .modal-dialog {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  button,
+  .btn,
+  .btn-close,
+  .modal-footer {
+    display: none !important;
+  }
+
+  input {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .card {
+    page-break-inside: avoid;
+  }
+}
+
 </style>
