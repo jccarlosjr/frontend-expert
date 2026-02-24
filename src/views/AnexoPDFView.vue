@@ -814,6 +814,8 @@ export default {
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
 
+      if(loan.installment <= 19.99) return;
+
       const payload = {
         age: Number(this.idade),
         original_bank: parseInt(loan.original_bank),
