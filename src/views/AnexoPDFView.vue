@@ -92,6 +92,12 @@
       </div>
     </form>
 
+    <div v-if="data && data.name" class="mt-4">
+      <div class="text-center card p-3 shadow-sm h-100">
+        <strong class="text-dark h5">{{ data.name }} - {{ data.nb_number }}</strong>
+      </div>
+    </div>
+
     <div v-if="data && data.loans && data.loans.length" class="mt-4">
       <div class="row g-3">
 
@@ -104,7 +110,10 @@
               <div class="card p-3 shadow-sm h-100 text-center">
                 <small class="text-muted text-uppercase">Margem Livre</small>
 
-                <div class="fs-4 fw-semibold text-success gap-2">
+                <div
+                  class="fs-4 fw-semibold gap-2"
+                  :class="availableMargin <= 0 ? 'text-danger' : 'text-success'"
+                >
                   <div class="card-body g-2">
 
                   <template v-if="!editingMargin">
@@ -139,7 +148,10 @@
               <div class="card p-3 shadow-sm h-100 text-center">
                 <small class="text-muted text-uppercase">RMC</small>
 
-                <div class="fs-6 fw-semibold text-primary mt-1">
+                <div
+                  class="fs-6 fw-semibold mt-1"
+                  :class="data.available_margin?.rmc <= 0 ? 'text-danger' : 'text-primary'"
+                >
                   {{ formatCurrency(data.available_margin?.rmc) }}
                 </div>
 
@@ -167,7 +179,10 @@
               <div class="card p-3 shadow-sm h-100 text-center">
                 <small class="text-muted text-uppercase">RCC</small>
 
-                <div class="fs-6 fw-semibold text-warning mt-1">
+                <div
+                  class="fs-6 fw-semibold mt-1"
+                  :class="data.available_margin?.rcc <= 0 ? 'text-danger' : 'text-warning'"
+                >
                   {{ formatCurrency(data.available_margin?.rcc) }}
                 </div>
 
