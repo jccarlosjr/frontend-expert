@@ -853,6 +853,11 @@ export default {
 
       const margem = this.data.available_margin['margem'];
 
+      if (margem < 20) {
+        this.margins = [];
+        return;
+      }
+
       const payload = {
         age: Number(this.idade),
         installment: Number(margem),
