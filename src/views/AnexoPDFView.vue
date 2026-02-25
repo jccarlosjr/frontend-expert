@@ -94,9 +94,36 @@
 
     <div v-if="data && data.name" class="mt-4">
       <div class="text-center card p-3 shadow-sm h-100">
-        <strong class="text-dark h5">{{ data.name }} - {{ data.nb_number }}</strong>
+
+        <strong class="fw-heavyer strong h4">{{ data.name }}</strong><small>Matrícula {{ data.nb_number }} (Espécie {{ entityCode }})</small>
+
+        <div class="mt-3">
+          <div
+            v-if="data && data.bank"
+            class="bg-secondary-subtle d-inline-flex gap-4 px-4 py-2 rounded mx-auto"
+          >
+
+            <div class="text-center">
+              <div class="fw-semibold small">Banco</div>
+              <div><small>{{ data.bank }}</small></div>
+            </div>
+
+            <div class="text-center">
+              <div class="fw-semibold small">Agência</div>
+              <div><small>{{ data.agency }}</small></div>
+            </div>
+
+            <div class="text-center">
+              <div class="fw-semibold small">Conta</div>
+              <div><small>{{ data.account }}</small></div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
+
 
     <div v-if="data && data.loans && data.loans.length" class="mt-4">
       <div class="row g-3">
