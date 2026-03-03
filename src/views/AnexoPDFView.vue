@@ -75,10 +75,18 @@
         <input id="ddbInput" type="text" class="form-control" v-model="ddb" @input="maskDate" @blur="validateDDBDate"
           maxlength="10" />
       </div>
-      <div class="col-6 col-md-1">
-        <label class="form-label fw-bold">Idade</label>
-        <input type="text" required class="form-control" id="idadeInput" v-model="idade" maxlength="2"
-          @input="onlyNumbers">
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-bold">Nascimento</label>
+        <input
+          type="text"
+          required
+          class="form-control"
+          v-model="birthDate"
+          maxlength="10"
+          placeholder="dd/mm/aaaa"
+          @input="maskBirthDate"
+          @blur="validateBirthDate"
+        >
       </div>
       <div class="col-6 col-md-2">
         <input class="form-check-input me-2" type="checkbox" id="analfabetoCheck" v-model="analfabeto">
@@ -557,7 +565,7 @@ export default {
       loanResults: {},
       loadingSim: {},
       hover: null,
-      idade: "",
+      birthDate: "",
       entityCode: "",
       analfabeto: false,
       selectedBank: null,
@@ -844,7 +852,7 @@ export default {
       if(loan.installment <= 19.99) return;
 
       const payload = {
-        age: Number(this.idade),
+        age: this.calculateAge(this.birthDate),
         original_bank: parseInt(loan.original_bank),
         rate: Number(loan.rate),
         original_terms: Number(loan.paids_terms + loan.remaining_terms),
@@ -888,7 +896,7 @@ export default {
       }
 
       const payload = {
-        age: Number(this.idade),
+        age: this.calculateAge(this.birthDate),
         installment: Number(margem),
         entity_code: Number(this.entityCode),
         illiterate: this.analfabeto,
@@ -927,7 +935,7 @@ export default {
       };
 
       const payload = {
-        age: Number(this.idade),
+        age: this.calculateAge(this.birthDate),
         installment: Number(installment),
         entity_code: Number(this.entityCode),
         illiterate: this.analfabeto,
@@ -1022,6 +1030,52 @@ export default {
       v = (Number(v) / 100).toFixed(2);
       v = v.replace(".", ",");
       this.availableMarginInput = v;
+    },
+    calculateAge(dateBR) {
+      if (!dateBR || dateBR.length !== 10) return null;
+
+      const [day, month, year] = dateBR.split("/");
+      const birth = new Date(year, month - 1, day);
+      const today = new Date();
+
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age;
+    },
+    maskBirthDate() {
+      let value = this.birthDate.replace(/\D/g, "");
+      if (value.length > 8) value = value.slice(0, 8);
+
+      if (value.length >= 5) {
+        value = value.replace(/^(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
+      } else if (value.length >= 3) {
+        value = value.replace(/^(\d{2})(\d{0,2})/, "$1/$2");
+      }
+
+      this.birthDate = value;
+    },
+    validateBirthDate() {
+      if (!this.birthDate || this.birthDate.length !== 10) return;
+
+      const [day, month, year] = this.birthDate.split("/");
+      const birth = new Date(year, month - 1, day);
+      const today = new Date();
+
+      if (birth > today) {
+        showToast("Data de nascimento inválida", "danger");
+        this.birthDate = "";
+        return;
+      }
+
+      const age = this.calculateAge(this.birthDate);
+
+      if (age < 18) {
+        showToast("Cliente deve ser maior de idade", "warning");
+      }
     },
   }
 }
