@@ -1,14 +1,14 @@
 <template>
   <div class="container py-3">
     <form class="row g-2 align-items-end mb-4" @submit.prevent="sendRequest">
-      <div class="col-12 col-md-4">
-        <label for="formFile" class="form-label fw-bold">Arquivo PDF</label>
-        <input class="form-control" required type="file" id="formFile" ref="fileInput" @change="onChangeFile"
+      <div class="col-12 col-md-3">
+        <label for="formFile" class="form-label fw-bold">Extrato de Consignação</label>
+        <input class="form-control form-control-sm" required type="file" title="Extrato" id="formFile" ref="fileInput" @change="onChangeFile"
           accept="application/pdf" />
       </div>
       <div class="col-12 col-md-3">
         <label for="entityCodeInput" class="form-label fw-bold">Espécie</label>
-        <select name="entityCodeInput" required class="form-control" id="entityCodeInput" v-model="entityCode"
+        <select name="entityCodeInput" required class="form-control form-control-sm" id="entityCodeInput" v-model="entityCode"
           @change="validateDDB">
           <option value="" selected disabled>Selecione...</option>
           <option value="1">1 - Por morte do trabalhador rural</option>
@@ -72,7 +72,7 @@
       </div>
       <div v-if="showDDB" class="col-6 col-md-2">
         <label for="form-label fw-bold">Data Despacho (DDB)</label>
-        <input id="ddbInput" type="text" class="form-control" v-model="ddb" @input="maskDate" @blur="validateDDBDate"
+        <input id="ddbInput" type="text" class="form-control form-control-sm" v-model="ddb" @input="maskDate" @blur="validateDDBDate"
           maxlength="10" />
       </div>
       <div class="col-6 col-md-2">
@@ -80,7 +80,7 @@
         <input
           type="text"
           required
-          class="form-control"
+          class="form-control form-control-sm"
           v-model="birthDate"
           maxlength="10"
           placeholder="dd/mm/aaaa"
@@ -88,12 +88,12 @@
           @blur="validateBirthDate"
         >
       </div>
-      <div class="col-6 col-md-2">
-        <input class="form-check-input me-2" type="checkbox" id="analfabetoCheck" v-model="analfabeto">
-        <label class="form-label fw-bold">Analfabeto</label>
+      <div class="col-6 col-md-1">
+        <input class="form-check-input  me-2" type="checkbox" id="analfabetoCheck" v-model="analfabeto">
+        <small class="form-label fw-bold">Analfabeto</small>
       </div>
       <div class="col-6 col-md-2">
-        <button type="submit" class="btn btn-primary w-100" :disabled="loading">
+        <button type="submit" class="btn btn-sm btn-primary w-75" :disabled="loading">
           <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
           Enviar
         </button>
