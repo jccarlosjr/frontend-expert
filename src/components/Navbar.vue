@@ -2,19 +2,7 @@
   <header class="navbar">
     <div class="logo" id="title-logo">Roteiro de Bolso</div>
 
-    <nav :class="['nav-links', { open: isOpen }]">
-      
-      <router-link
-        v-for="item in menu"
-        :key="item.label"
-        :to="item.route"
-        class="nav-item"
-        @click="handleClick(item)"
-      >
-        <i v-if="item.icon" :class="item.icon"></i>
-        <span style="margin-left: 6px">{{ item.label }}</span>
-      </router-link>
-
+    <nav :class="['nav-links', { open: isOpen }]">      
       <!-- BOTÃO CARTEIRA -->
       <a
         href="#"
@@ -31,6 +19,18 @@
           {{ walletStore.count }}
         </span>
       </a>
+
+      <router-link
+        v-for="item in menu"
+        :key="item.label"
+        :to="item.route"
+        class="nav-item"
+        @click="handleClick(item)"
+      >
+        <i v-if="item.icon" :class="item.icon"></i>
+        <span style="margin-left: 6px">{{ item.label }}</span>
+      </router-link>
+
 
     </nav>
 
@@ -55,7 +55,8 @@ export default {
       menu: [
         { label: "Home", route: "/", icon: "bi bi-house" },
         { label: "Simuladores", route: "/simulations", icon: "bi bi-calculator" },
-        { label: "Subir PDF", route: "/anexo-pdf", icon: "bi bi-upload" },
+        { label: "Extrato INSS", route: "/anexo-pdf", icon: "bi bi-upload" },
+        { label: "Extrato SIAPE", route: "/anexo-pdf-siape", icon: "bi bi-upload" },
         { label: "Simulações", route: "/my-simulations", icon: "bi-folder" },
         { label: "Sair", route: "/sair", icon: "bi bi-door-open" },
       ],

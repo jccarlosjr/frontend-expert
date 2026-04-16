@@ -8,6 +8,8 @@ import HomeView from '../views/HomeView.vue'
 import SimulationsView from '../views/SimulationsView.vue'
 import AnexoPDFView from '../views/AnexoPDFView.vue'
 import SimulationListView from '../views/SimulationListView.vue'
+import AnexoPDFSiapeView from '../views/AnexoPDFSiapeView.vue'
+
 
 const routes = [
   {
@@ -41,6 +43,11 @@ const routes = [
         path: 'anexo-pdf',
         name: 'anexo-pdf',
         component: AnexoPDFView
+      },
+      {
+        path: 'anexo-pdf-siape',
+        name: 'anexo-pdf-siape',
+        component: AnexoPDFSiapeView
       },
       {
         path: 'my-simulations',

@@ -136,7 +136,7 @@
               <label for="functionSituations">Situação Funcional</label>
               <select class="form-select form-select-sm text-center" id="functionSituations" required>
                     <option selected value="1">Ativo Permanente</option>
-                    <option selected value="1">Pensão Permanente</option>
+                    <option value="1">Pensão Permanente</option>
                     <option value="2">Inativos/Aposentados</option>
                     <option value="3">Requisitado</option>
                     <option value="4">Nomeado Cargo Comis</option>
