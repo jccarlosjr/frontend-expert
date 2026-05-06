@@ -53,47 +53,23 @@
         <div class="row g-3 justify-content-center">
           <!-- COLUNA 1 -->
           <div class="col-12 col-md-6 col-lg-3">
-            <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="idadeInput" placeholder="Idade" maxlength="2"
-                @input="onlyNumbers">
-              <label for="idadeInput">Idade</label>
-            </div>
-            <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="prazoOriginalInput" placeholder="Prazo Original" maxlength="3"
-                @input="onlyNumbers">
-              <label for="prazoOriginalInput">Prazo Original</label>
-            </div>
-            <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="prazoRestanteInput" placeholder="Prazo Restante" maxlength="3"
-                @input="onlyNumbers">
-              <label for="prazoRestanteInput">Prazo Restante</label>
-            </div>
+              <input type="text" class="form-control mb-3" id="idadeInput" placeholder="Idade" maxlength="2" @input="onlyNumbers">
+              <input type="text" class="form-control mb-3" id="prazoOriginalInput" placeholder="Prazo Original" maxlength="3" @input="onlyNumbers">
+              <input type="text" class="form-control mb-3" id="prazoRestanteInput" placeholder="Prazo Restante" maxlength="3" @input="onlyNumbers">
           </div>
 
           <!-- COLUNA 2 -->
-          <div class="col-12 col-md-6 col-lg-3">
-            <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="bancoOrigemInput" placeholder="Banco Origem" maxlength="3"
-                @input="onlyNumbers">
-              <label for="bancoOrigemInput">Banco Origem</label>
-            </div>
-            <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="parcelaInput" placeholder="Parcela" maxlength="7"
-                @input="floatFormat">
-              <label for="parcelaInput">Parcela</label>
-            </div>
-            <div class="form-floating mb-3">
-              <input type="text" class="form-control" id="saldoInput" placeholder="Saldo Devedor" maxlength="9"
-                @input="floatFormat">
-              <label for="saldoInput">Saldo Devedor</label>
-            </div>
+          <div class="col-12 col-md-6 col-lg-3 ">
+              <input type="text" class="form-control mb-3" id="bancoOrigemInput" placeholder="Banco Origem" maxlength="3" @input="onlyNumbers">
+              <input type="text" class="form-control mb-3" id="parcelaInput" placeholder="Parcela" maxlength="7" @input="floatFormat">
+              <input type="text" class="form-control mb-3" id="saldoInput" placeholder="Saldo Devedor" maxlength="9" @input="floatFormat">
           </div>
         </div>
         <div class="row g-3 justify-content-center">
           <div class="col-12 col-md-6 col-lg-6">
             <div class="mb-3">
               <select class="form-control" id="entityCodeInput" required v-model="entityCode" @change="validateDDB">
-                <option selected disabled>Espécie</option>
+                <option disabled selected value="">Espécie</option>
                 <option value="1">1 - Por morte do trabalhador rural</option>
                 <option value="2">2 - Pensão por morte por acidente do trabalho do trabalhador rural</option>
                 <option value="3">3 - Pensão por morte do empregador rural</option>
@@ -176,13 +152,19 @@
 
           <div class="col-6 col-md-2">
             <div class="form-check mt-2">
-              <input class="form-check-input" type="checkbox" id="negativoCheck">
+              <input class="form-check-input" type="checkbox" id="negativoCheck" @change="validateNegativo" v-model="negativo">
               <label class="form-check-label" for="negativoCheck">
                 Negativo
               </label>
             </div>
           </div>
         </div>
+        <div class="row mt-2 g-3 justify-content-center" v-if="showMargemNegativa">
+          <div class="col-6 col-md-6">
+            <input type="text" class="form-control text-center text-danger" id="margemNegativaInput" placeholder="Margem Negativa" v-model="margemNegativa" @input="margemNegativa = formatCurrency(margemNegativa)">
+          </div>
+        </div>
+
         <div class="text-center">
           <button class="btn btn-success btn-sm mt-3 mb-5" @click="loadData">
             Consultar Roteiro Operacional
@@ -299,6 +281,8 @@ export default {
       loading: false,
       entityCode: "",
       ddb: "",
+      margemNegativa: "",
+      showMargemNegativa: false,
       showDDB: false,
       inv: ["32", "92", "04", "06", "33", "34", "37", "38", "51", "83", "96"],
       loas: ["88", "87"],
@@ -407,12 +391,19 @@ export default {
         input.value = value;
       }
     },
+    formatCurrency(value) {
+      if (!value) return "";
+      if (/^\d+\.\d{2}$/.test(value)) return value;
+      const digits = value.replace(/\D/g, "");
+      if (digits.length <= 2) return digits;
+      return `${digits.slice(0, -2)}.${digits.slice(-2)}`;
+    },
     async loadData() {
       const idade = document.getElementById("idadeInput").value.trim();
       const bancoOrigem = document.getElementById("bancoOrigemInput").value.trim();
       const prazoOriginal = document.getElementById("prazoOriginalInput").value.trim();
       const saldo = document.getElementById("saldoInput").value.trim();
-      const parcela = document.getElementById("parcelaInput").value.trim();
+      let parcela = document.getElementById("parcelaInput").value.trim();
       const prazoRestante = document.getElementById("prazoRestanteInput").value.trim();
       const entityCode = document.getElementById("entityCodeInput").value;
       const analfabeto = document.getElementById("analfabetoCheck").checked;
@@ -422,9 +413,13 @@ export default {
         return /^\d+$/.test(value);
       }
 
+      if (negativo) {
+        parcela = this.recalculateNegativeValue();
+      }
+      
       function getRate(amountFinanced, installment, terms) {
         const precision = 0.00001;
-        let minRate = 0.01;
+        let minRate = 0.008;
         let maxRate = 0.04;
         const maxIterations = 1000;
         const defaultValue = 0.01;
@@ -453,7 +448,6 @@ export default {
         if (!day || !month || !year) return null;
         return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
       }
-
 
       function isFloat(value) {
         return /^(\d+|\d+\.\d{1,2})$/.test(value);
@@ -490,12 +484,14 @@ export default {
         showToast("Selecione uma espécie válida.", 'danger');
         return;
       }
-      let rate = getRate(parseFloat(saldo.replace(",", ".")), parseFloat(parcela.replace(",", ".")), parseInt(prazoRestante))
+      let rate = getRate(parseFloat(saldo), parseFloat(parcela), parseInt(prazoRestante))
       if (rate === 0.01) {
         showToast("Não foi possível calcular uma taxa válida.\nVerifique prazo restante, saldo devedor e parcela.", 'danger');
         return;
       }
+
       rate = rate * 100
+      if (rate) showToast(`Taxa calculada: ${rate.toFixed(2)}%`, 'success');
 
       const payload = {
         age: Number(idade),
@@ -503,8 +499,8 @@ export default {
         rate: rate,
         original_terms: Number(prazoOriginal),
         remaining_terms: Number(prazoRestante),
-        installment: Number(parcela.replace(",", ".")),
-        ballance: Number(saldo.replace(",", ".")),
+        installment: Number(parcela),
+        ballance: Number(saldo),
         entity_code: Number(entityCode),
         illiterate: analfabeto,
         negative: negativo,
@@ -535,12 +531,25 @@ export default {
         this.ddb = "";
       }
     },
+    validateNegativo() {
+      if (this.negativo === true) {
+        this.showMargemNegativa = true;
+      } else {
+        this.showMargemNegativa = false;
+        this.margemNegativa = "";
+      }
+    },
     validateDDBDate() {
       if (!this.ddb || this.ddb.length !== 10) return;
       if (this.isFutureDate(this.ddb)) {
         showToast("A data do despacho não pode ser superior à data atual", "danger");
         this.ddb = "";
       }
+    },
+    recalculateNegativeValue() {
+      let parcela = document.getElementById("parcelaInput").value.trim();
+      let negative = document.getElementById("margemNegativaInput")?.value?.trim();
+      return Number(parcela) - Number(negative);
     },
     isFutureDate(dateBR) {
       const [day, month, year] = dateBR.split("/");
