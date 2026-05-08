@@ -27,7 +27,7 @@
                 <tr v-for="(table, idx) in selectedBank?.result || []" :key="idx">
                   <td>{{ table.name }}</td>
                   <td>{{ table.terms }}x</td>
-                  <td>{{ table.exchange }}</td>
+                  <td>{{ table.exchange.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</td>
                   <td>
                     <button
                       class="btn btn-sm btn-outline-primary"
