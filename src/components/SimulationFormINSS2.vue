@@ -473,10 +473,10 @@ export default {
 
       function getRate(amountFinanced, installment, terms) {
         const precision = 0.00001;
-        let minRate = 0.01;
+        let minRate = 0.001;
         let maxRate = 0.04;
         const maxIterations = 1000;
-        const defaultValue = 0.01;
+        const defaultValue = 0.001;
 
         for (let iter = 0; iter < maxIterations; iter++) {
           const rate = (minRate + maxRate) / 2;
@@ -548,7 +548,7 @@ export default {
         return;
       }
 
-      if (t === 0.01){
+      if (t === 0.001){
         showToast("Não foi possível calcular uma taxa válida.\nVerifique prazo original, valor financiado e parcela.", 'danger');
         return;
       }

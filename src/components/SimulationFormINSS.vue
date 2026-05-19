@@ -419,10 +419,10 @@ export default {
       
       function getRate(amountFinanced, installment, terms) {
         const precision = 0.00001;
-        let minRate = 0.008;
+        let minRate = 0.001;
         let maxRate = 0.04;
         const maxIterations = 1000;
-        const defaultValue = 0.01;
+        const defaultValue = 0.001;
 
         for (let iter = 0; iter < maxIterations; iter++) {
           const rate = (minRate + maxRate) / 2;
@@ -485,7 +485,7 @@ export default {
         return;
       }
       let rate = getRate(parseFloat(saldo), parseFloat(parcela), parseInt(prazoRestante))
-      if (rate === 0.01) {
+      if (rate === 0.001) {
         showToast("Não foi possível calcular uma taxa válida.\nVerifique prazo restante, saldo devedor e parcela.", 'danger');
         return;
       }
