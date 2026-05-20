@@ -473,7 +473,7 @@ export default {
 
       function getRate(amountFinanced, installment, terms) {
         const precision = 0.00001;
-        let minRate = 0.001;
+        let minRate = -3;
         let maxRate = 0.04;
         const maxIterations = 1000;
         const defaultValue = 0.001;
@@ -593,7 +593,7 @@ export default {
     recalculateNegativeValue() {
       let parcela = document.getElementById("parcelaInput").value.trim();
       let negative = document.getElementById("margemNegativaInput")?.value?.trim();
-      return Number(parcela) - Number(negative);
+      return parseFloat(Number(parcela) - Number(negative));
     },
     validateDDB() {
       if (this.inv.includes(this.entityCode) || this.loas.includes(this.entityCode)) {
