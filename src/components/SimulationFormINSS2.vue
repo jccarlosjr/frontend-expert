@@ -442,7 +442,7 @@ export default {
       const idade = document.getElementById("idadeInput").value.trim();
       const prazoOriginal = document.getElementById("prazoOriginalInput").value.trim();
       const bancoOrigem = document.getElementById("bancoOrigemInput").value.trim();
-      let parcela = document.getElementById("parcelaInput").value.trim();
+      let parcela = Number(document.getElementById("parcelaInput").value.trim());
       const financiado = document.getElementById("valorFinanciadoInput").value.trim();
       const entityCode = document.getElementById("entityCodeInput").value;
       const analfabeto = document.getElementById("analfabetoCheck").checked;
@@ -525,6 +525,9 @@ export default {
         return prazoRestante <= prazoOriginal;
       }
 
+      console.log(parcela)
+      console.log(typeof(parcela))
+
       const validations = [
         { value: idade, name: "Idade", rule: isNumber },
         { value: bancoOrigem, name: "Banco Origem", rule: isNumber },
@@ -591,9 +594,9 @@ export default {
       }
     },
     recalculateNegativeValue() {
-      let parcela = document.getElementById("parcelaInput").value.trim();
-      let negative = document.getElementById("margemNegativaInput")?.value?.trim();
-      return parseFloat(Number(parcela) - Number(negative));
+      let parcela = Number(document.getElementById("parcelaInput").value.trim());
+      let negative = Number(document.getElementById("margemNegativaInput")?.value?.trim());
+      return (parseFloat(parcela) - parseFloat(negative)).toFixed(2);
     },
     validateDDB() {
       if (this.inv.includes(this.entityCode) || this.loas.includes(this.entityCode)) {

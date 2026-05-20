@@ -403,7 +403,7 @@ export default {
       const bancoOrigem = document.getElementById("bancoOrigemInput").value.trim();
       const prazoOriginal = document.getElementById("prazoOriginalInput").value.trim();
       const saldo = document.getElementById("saldoInput").value.trim();
-      let parcela = document.getElementById("parcelaInput").value.trim();
+      let parcela = Number(document.getElementById("parcelaInput").value.trim());
       const prazoRestante = document.getElementById("prazoRestanteInput").value.trim();
       const entityCode = document.getElementById("entityCodeInput").value;
       const analfabeto = document.getElementById("analfabetoCheck").checked;
@@ -475,7 +475,7 @@ export default {
       for (let v of validations) {
         if (!v.value || !v.rule(v.value)) {
           showToast(`Campo inválido: ${v.name}`, 'danger');
-          setFieldError(v.name.replace(/\s/g, '') + 'Input', true);
+          this.setFieldError(v.name.replace(/\s/g, '') + 'Input', true);
           return;
         }
       }
@@ -549,7 +549,7 @@ export default {
     recalculateNegativeValue() {
       let parcela = document.getElementById("parcelaInput").value.trim();
       let negative = document.getElementById("margemNegativaInput")?.value?.trim();
-      return parseFloat(Number(parcela) - Number(negative));
+      return (parseFloat(parcela) - parseFloat(negative)).toFixed(2);
     },
     isFutureDate(dateBR) {
       const [day, month, year] = dateBR.split("/");
